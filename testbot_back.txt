@@ -1,0 +1,62 @@
+token = '323987975:AAF0caZCBdoLh2lco3Bv21n12KcONh7MZ_k'
+father_id = 87664746
+command_list = ['/time']
+edu_list=['hols','que','sdf']
+def get_me():
+    return requests.post(url='https://api.telegram.org/bot{0}/{1}'.format(token, 'getMe')).json()
+
+
+def get_updates():
+    return requests.post(url='https://api.telegram.org/bot{0}/{1}'.format(token, 'getUpdates')).json()
+
+
+def get_user(response):
+    if response['ok']:
+        result = response['result']
+
+        if 'message' in result[-1]:
+            message = result[-1]['message']
+            if 'from' in message:
+                return {'id': message['from']['id'], 'first_name': message['from']['first_name']}
+
+
+def send_message(chat_id, text):
+    return requests.post(url='https://api.telegram.org/bot{0}/{1}'.format(token, 'sendMessage'),
+                         data={'chat_id': chat_id, 'text': text}).json()
+
+
+def is_command(command):
+    return command in command_list
+
+
+def get_text(response):
+    if response['ok']:
+        result = response['result']
+
+        if 'message' in result[-1]:
+            message = result[-1]['message']
+            if 'text' in message:
+                return message['text']
+me = get_me()
+update_old = -1
+
+while 1:
+    updates = get_updates()
+    user = get_user(updates)
+    update_id = updates['result'][-1]['update_id']
+    in_message = get_text(updates)
+    if update_id != update_old: #mira si se ha recibido algun mensaje nuevo
+        if not is_command(in_message):
+            if user['id'] == father_id:
+                index=randint(0,len(edu_list)-1)
+                sent = send_message(father_id, edu_list[index])
+            else:
+                sent = send_message(user['id'], 'Tienes caramelos')
+        else:
+            if in_message == '/time':
+                sent = send_message(user['id'], datetime.datetime.now())
+        update_old = update_id
+
+
+
+pass
